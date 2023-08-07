@@ -1,0 +1,32 @@
+Resources:
+  Rule:
+    Type: AWS::Config::ConfigRule
+    Properties:
+      Scope:
+        ComplianceResourceTypes:
+          - "{resourceType}"
+      Source:
+        Owner: CUSTOM_LAMBDA
+        SourceDetails:
+          - EventSource: aws.config
+            MessageType: ConfigurationItemChangeNotification
+      InputParameters:
+        "{parameterName}": "{parameterValue}"
+  Remediation:
+    Type: AWS::Config::RemediationConfiguration
+    Properties:
+      ConfigRuleName: "{WILL BE OVERWRITTEN}"
+      ResourceType: "{resourceType}"
+      TargetType: SSM_DOCUMENT
+      TargetId: "{WILL BE OVERWRITTEN}"
+      Parameters:
+        volumeid:
+          ResourceValue:
+            Value: RESOURCE_ID
+      ExecutionControls:
+        SsmControls:
+          ConcurrentExecutionRatePercentage: 10
+          ErrorPercentage: 10
+      Automatic: False
+      MaximumAutomaticAttempts: 10
+      RetryAttemptSeconds: 600

@@ -1,0 +1,23 @@
+schemaVersion: "0.3"
+
+assumeRole: "arn:{{ global:AWS_PARTITION }}:iam::{{ global:ACCOUNT_ID }}:role/CostOpt-Automation-{{ global:REGION }}"
+
+parameters:
+  volumeid:
+    type: String
+
+mainSteps:
+  - name: ModifyVolume
+    action: aws:executeAwsApi
+    outputs:
+      - Name: Output
+        Selector: $
+        Type: StringMap
+    inputs:
+      Service: ec2
+      Api: ModifyVolume
+      VolumeId: "{{ volumeid }}"
+      VolumeType: gp3
+
+outputs:
+  - ModifyVolume.Output

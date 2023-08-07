@@ -1,0 +1,120 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  RuleFunctionRoleArn:
+    Type: String
+
+  ConfigRoleExistingNamePattern:
+    Type: String
+
+Resources:
+  AutomationRole:
+    Type: AWS::IAM::Role
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W28
+            reason: Hardcoded name required for Conformance Pack.
+    Properties:
+      RoleName: !Sub CostOpt-Automation-${AWS::Region}
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ssm.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: EC2ModifyVolume
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: ec2:ModifyVolume
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:volume/*"
+
+  CrossAccountRole:
+    Type: AWS::IAM::Role
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W28
+            reason: Hardcoded name required for Conformance Pack.
+    Properties:
+      RoleName: !Sub Custom_AWSServiceRoleForConfig-${AWS::Region}
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: config.amazonaws.com
+              AWS:
+                - !Ref RuleFunctionRoleArn
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWS_ConfigRole
+
+  ConfigureConfigFunctionRole:
+    Type: AWS::IAM::Role
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W11
+            reason: Resource level permissions not possible on these APIs.
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: ConfigureConfig
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - config:DescribeConfigurationRecorders
+                  - config:PutConfigurationRecorder
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - iam:PassRole
+                Resource:
+                  - !GetAtt CrossAccountRole.Arn
+                  - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${ConfigRoleExistingNamePattern}"
+
+  ConfigureConfigFunction:
+    Type: AWS::Lambda::Function
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks:
+            - E3002 # Need to ignore cfn-lint illegal function check due to usage of !Rain::Embed
+      cfn_nag:
+        rules_to_suppress:
+          - id: W89
+            reason: VPC not required.
+          - id: W92
+            reason: Reserved Concurrency not required.
+          - id: W58
+            reason: The managed policy AWSLambdaBasicExecutionRole gives the required CloudWatch Logs permissions.
+    Properties:
+      Runtime: python3.10
+      Handler: index.handler
+      Role: !GetAtt ConfigureConfigFunctionRole.Arn
+      Architectures:
+        - arm64
+      Code:
+        ZipFile: !Rain::Embed functions/configure_config.py
+
+  ConfigureConfig:
+    Type: Custom::OrganizationRootId
+    Properties:
+      ServiceToken: !GetAtt ConfigureConfigFunction.Arn
+      ConfigRoleArn: !GetAtt CrossAccountRole.Arn

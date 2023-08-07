@@ -1,17 +1,16 @@
-## My Project
+# hmb-412-CostOptimizationConformance
 
-TODO: Fill this README out!
+This repository contains code to deploy the Cost Optimization Orgnaization Conformance pack into an AWS Organization.
 
-Be sure to:
+## Pre-requisites
 
-* Change the title in this README
-* Edit your repository description on GitHub
+In order to use this solution the following components must be already deployed within an AWS account.
 
-## Security
+- AWS Organizations.
+- AWS Config deployed in same region in all member accounts of the AWS Organization.
+- Delegated AWS Config account within AWS Organizations.
+- Delegated AWS CloudFormation Stackets account within AWS Organizations.
 
-See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
+## Deployment guide
 
-## License
-
-This library is licensed under the MIT-0 License. See the LICENSE file.
-
+Create a new CloudFormation stack using the `main.yaml` file

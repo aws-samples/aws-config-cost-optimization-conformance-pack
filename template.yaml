@@ -1,0 +1,189 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Transform: AWS::Serverless-2016-10-31
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Settings
+        Parameters:
+          - DeployingInDelegatedAdminAccount
+          - ConfigRoleExistingNamePattern
+    ParameterLabels:
+      DeployingInDelegatedAdminAccount:
+        default: Deploying In Delegated Admin Account?
+      ConfigRoleExistingNamePattern:
+        default: Supply the existing naming pattern for the IAM roles currently used for AWS Config.
+
+Parameters:
+  DeployingInDelegatedAdminAccount:
+    Type: String
+    AllowedValues:
+      - "True"
+      - "False"
+
+  ConfigRoleExistingNamePattern:
+    Type: String
+
+Conditions:
+
+  DelegatedAdmin: !Equals [!Ref DeployingInDelegatedAdminAccount, "True"]
+
+Resources:
+  GetOrgDetailsFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks:
+            - E3002 # Need to ignore cfn-lint illegal function check due to usage of !Rain::Embed
+      cfn_nag:
+        rules_to_suppress:
+          - id: W89
+            reason: VPC not required.
+          - id: W92
+            reason: Reserved Concurrency not required.
+          - id: W11
+            reason: Resource level permissions not possible on this API.
+    Properties:
+      Runtime: python3.10
+      Handler: index.handler
+      Architectures:
+        - arm64
+      Policies:
+        - Version: 2012-10-17
+          Statement:
+            - Effect: Allow
+              Action:
+                - organizations:ListRoots
+                - organizations:DescribeOrganization
+              Resource: "*"
+      InlineCode: !Rain::Embed functions/get_org_details.py
+
+  OrgDetails:
+    Type: Custom::OrganizationRootId
+    Properties:
+      ServiceToken: !GetAtt GetOrgDetailsFunction.Arn
+
+  CustomConfigFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks:
+            - E3002 # Need to ignore cfn-lint illegal function check due to usage of !Rain::Embed
+      cfn_nag:
+        rules_to_suppress:
+          - id: W89
+            reason: VPC not required.
+          - id: W92
+            reason: Reserved Concurrency not required.
+          - id: W11
+            reason: Resource level permissions not possible.
+    Properties:
+      Runtime: python3.10
+      Handler: index.lambda_handler
+      Architectures:
+        - arm64
+      Policies:
+        - Version: 2012-10-17
+          Statement:
+            - Effect: Allow
+              Action:
+                - sts:AssumeRole
+              Resource: !Sub arn:${AWS::Partition}:iam::*:role/Custom_AWSServiceRoleForConfig-${AWS::Region}
+      InlineCode: !Rain::Embed functions/custom_config_rule-pkg.py
+
+  CustomConfigFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      Principal: config.amazonaws.com
+      FunctionName: !GetAtt CustomConfigFunction.Arn
+
+  StackSet:
+    Type: AWS::CloudFormation::StackSet
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks:
+            - E3002 # Need to ignore cfn-lint illegal function check due to usage of !Rain::Embed
+    Properties:
+      StackSetName: !Sub ${AWS::StackName}-StackSet
+      PermissionModel: SERVICE_MANAGED
+      StackInstancesGroup:
+        - DeploymentTargets:
+            OrganizationalUnitIds:
+              - !Ref OrgDetails
+          Regions:
+            - !Ref AWS::Region
+      AutoDeployment:
+        Enabled: True
+        RetainStacksOnAccountRemoval: False
+      ManagedExecution:
+        Active: True
+      OperationPreferences:
+        MaxConcurrentPercentage: 100
+        FailureTolerancePercentage: 100
+        RegionConcurrencyType: PARALLEL
+      Capabilities:
+        - CAPABILITY_IAM
+        - CAPABILITY_NAMED_IAM
+      Parameters:
+        - ParameterKey: RuleFunctionRoleArn
+          ParameterValue: !GetAtt CustomConfigFunctionRole.Arn
+        - ParameterKey: ConfigRoleExistingNamePattern
+          ParameterValue: !Ref ConfigRoleExistingNamePattern
+      CallAs: !If [DelegatedAdmin, DELEGATED_ADMIN, SELF]
+      TemplateBody: !Rain::Embed stackset-pkg.yaml
+
+  ShareDocumentFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks:
+            - E3002 # Need to ignore cfn-lint illegal function check due to usage of !Rain::Embed
+      cfn_nag:
+        rules_to_suppress:
+          - id: W89
+            reason: VPC not required.
+          - id: W92
+            reason: Reserved Concurrency not required.
+          - id: W11
+            reason: Resource level permissions not possible on this API.
+    Properties:
+      Runtime: python3.10
+      Handler: index.handler
+      Architectures:
+        - arm64
+      Policies:
+        - Version: 2012-10-17
+          Statement:
+            - Effect: Allow
+              Action:
+                - organizations:ListAccounts
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - ssm:ModifyDocumentPermission
+              Resource: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:document/${AWS::StackName}-*Remediation-*
+      InlineCode: !Rain::Embed functions/share_document.py
+
+  ConformancePack:
+    Type: AWS::Config::OrganizationConformancePack
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks:
+            - E3002 # Need to ignore cfn-lint illegal function check due to usage of !Rain::Embed
+    DependsOn: StackSet
+    Properties:
+      OrganizationConformancePackName: Cost-Optimization
+      ExcludedAccounts:
+        - !GetAtt OrgDetails.MasterAccountId
+      ConformancePackInputParameters:
+        - ParameterName: CustomConfigFunctionArn
+          ParameterValue: !GetAtt CustomConfigFunction.Arn
+      TemplateBody: !Rain::Embed conformancepack-build.yaml
