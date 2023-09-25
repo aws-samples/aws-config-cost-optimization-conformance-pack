@@ -18,7 +18,7 @@ except ImportError:
 DEFAULT_RESOURCE_TYPE = "AWS::::Account"
 
 # Set to True to get the lambda to assume the Role attached on the Config Service (useful for cross-account).
-ASSUME_ROLE_MODE = True
+ASSUME_ROLE_MODE = False
 
 # Other parameters (no change needed)
 CONFIG_ROLE_TIMEOUT_SECONDS = 900
