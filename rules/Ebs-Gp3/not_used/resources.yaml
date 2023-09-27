@@ -1,0 +1,32 @@
+Resources:
+  Rule:
+    Type: AWS::Config::ConfigRule
+    Properties:
+      Scope:
+        ComplianceResourceTypes:
+          - AWS::EC2::Volume
+      Source:
+        Owner: CUSTOM_LAMBDA
+        SourceDetails:
+          - EventSource: aws.config
+            MessageType: ConfigurationItemChangeNotification
+      InputParameters:
+        desiredvolumeType: gp3
+  Remediation:
+    Type: AWS::Config::RemediationConfiguration
+    Properties:
+      ConfigRuleName: '{WILL BE OVERWRITTEN}'
+      ResourceType: AWS::EC2::Volume
+      TargetType: SSM_DOCUMENT
+      TargetId: '{WILL BE OVERWRITTEN}'
+      Parameters:
+        volumeid:
+          ResourceValue:
+            Value: RESOURCE_ID
+      ExecutionControls:
+        SsmControls:
+          ConcurrentExecutionRatePercentage: 10
+          ErrorPercentage: 10
+      Automatic: False
+      MaximumAutomaticAttempts: 10
+      RetryAttemptSeconds: 600

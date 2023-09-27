@@ -9,12 +9,9 @@ Metadata:
           default: Settings
         Parameters:
           - DeployingInDelegatedAdminAccount
-          - ConfigRoleExistingNamePattern
     ParameterLabels:
       DeployingInDelegatedAdminAccount:
         default: Deploying In Delegated Admin Account?
-      ConfigRoleExistingNamePattern:
-        default: Supply the existing naming pattern for the IAM roles currently used for AWS Config.
 
 Parameters:
   DeployingInDelegatedAdminAccount:
@@ -22,9 +19,6 @@ Parameters:
     AllowedValues:
       - "True"
       - "False"
-
-  ConfigRoleExistingNamePattern:
-    Type: String
 
 Conditions:
 
@@ -66,42 +60,6 @@ Resources:
     Properties:
       ServiceToken: !GetAtt GetOrgDetailsFunction.Arn
 
-  CustomConfigFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      cfn-lint:
-        config:
-          ignore_checks:
-            - E3002 # Need to ignore cfn-lint illegal function check due to usage of !Rain::Embed
-      cfn_nag:
-        rules_to_suppress:
-          - id: W89
-            reason: VPC not required.
-          - id: W92
-            reason: Reserved Concurrency not required.
-          - id: W11
-            reason: Resource level permissions not possible.
-    Properties:
-      Runtime: python3.10
-      Handler: index.lambda_handler
-      Architectures:
-        - arm64
-      Policies:
-        - Version: 2012-10-17
-          Statement:
-            - Effect: Allow
-              Action:
-                - sts:AssumeRole
-              Resource: !Sub arn:${AWS::Partition}:iam::*:role/Custom_AWSServiceRoleForConfig-${AWS::Region}
-      InlineCode: !Rain::Embed functions/custom_config_rule-pkg.py
-
-  CustomConfigFunctionPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      Principal: config.amazonaws.com
-      FunctionName: !GetAtt CustomConfigFunction.Arn
-
   StackSet:
     Type: AWS::CloudFormation::StackSet
     Metadata:
@@ -130,11 +88,6 @@ Resources:
       Capabilities:
         - CAPABILITY_IAM
         - CAPABILITY_NAMED_IAM
-      Parameters:
-        - ParameterKey: RuleFunctionRoleArn
-          ParameterValue: !GetAtt CustomConfigFunctionRole.Arn
-        - ParameterKey: ConfigRoleExistingNamePattern
-          ParameterValue: !Ref ConfigRoleExistingNamePattern
       CallAs: !If [DelegatedAdmin, DELEGATED_ADMIN, SELF]
       TemplateBody: !Rain::Embed stackset-pkg.yaml
 
@@ -183,7 +136,4 @@ Resources:
       OrganizationConformancePackName: Cost-Optimization
       ExcludedAccounts:
         - !GetAtt OrgDetails.MasterAccountId
-      ConformancePackInputParameters:
-        - ParameterName: CustomConfigFunctionArn
-          ParameterValue: !GetAtt CustomConfigFunction.Arn
       TemplateBody: !Rain::Embed conformancepack-build.yaml
