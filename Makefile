@@ -6,6 +6,7 @@ clean:
 	rm -f functions/*-pkg.py
 	rm -f *-build.yaml
 	rm -f *-pkg.yaml
+	rm main.yaml
 
 build:
 	python3 ./build/config_function.py
