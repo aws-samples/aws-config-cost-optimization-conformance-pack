@@ -15,7 +15,7 @@ In order to use this solution, the following components must be already deployed
 
 Download `template.yaml` from the latest release.
 
-Create a new CloudFormation stack this `template.yaml` file.
+Create a new CloudFormation stack using this `template.yaml` file.
 
 The parameters should be set as follows:
 
