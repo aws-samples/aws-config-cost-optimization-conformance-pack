@@ -4,11 +4,10 @@ from cfn_tools import dump_yaml, load_yaml
 
 rules_folder = "rules"
 rule_name_prefix = "CostOpt"
-# parameter_name = "CustomConfigFunctionArn"
 output_path = "conformancepack-build.yaml"
 
 template = {
-    "Parameters": {},  # parameter_name: {"Type": "String"}},
+    "Parameters": {},
     "Resources": {},
 }
 
@@ -26,7 +25,7 @@ for function_file in files:
                 "SourceIdentifier"
             ] = {
                 "Fn::Sub": "arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:CostOptimizationConformanceConfigRuleFunction"
-            }  # {"Ref": parameter_name}
+            }
             if (
                 "InputParameters"
                 in resource_content["Resources"][resource]["Properties"]
