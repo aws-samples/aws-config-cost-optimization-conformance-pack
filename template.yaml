@@ -2,28 +2,6 @@ AWSTemplateFormatVersion: 2010-09-09
 
 Transform: AWS::Serverless-2016-10-31
 
-Metadata:
-  AWS::CloudFormation::Interface:
-    ParameterGroups:
-      - Label:
-          default: Settings
-        Parameters:
-          - DeployingInDelegatedAdminAccount
-    ParameterLabels:
-      DeployingInDelegatedAdminAccount:
-        default: Deploying In Delegated Admin Account?
-
-Parameters:
-  DeployingInDelegatedAdminAccount:
-    Type: String
-    AllowedValues:
-      - "True"
-      - "False"
-
-Conditions:
-
-  DelegatedAdmin: !Equals [!Ref DeployingInDelegatedAdminAccount, "True"]
-
 Resources:
   GetOrgDetailsFunction:
     Type: AWS::Serverless::Function
@@ -88,7 +66,7 @@ Resources:
       Capabilities:
         - CAPABILITY_IAM
         - CAPABILITY_NAMED_IAM
-      CallAs: !If [DelegatedAdmin, DELEGATED_ADMIN, SELF]
+      CallAs: DELEGATED_ADMIN
       TemplateBody: !Rain::Embed stackset-pkg.yaml
 
   ShareDocumentFunction:
@@ -134,6 +112,4 @@ Resources:
     DependsOn: StackSet
     Properties:
       OrganizationConformancePackName: Cost-Optimization
-      ExcludedAccounts:
-        - !GetAtt OrgDetails.MasterAccountId
       TemplateBody: !Rain::Embed conformancepack-build.yaml
