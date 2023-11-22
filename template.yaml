@@ -112,4 +112,5 @@ Resources:
     DependsOn: StackSet
     Properties:
       OrganizationConformancePackName: Cost-Optimization
+      ConformancePackInputParameters: []
       TemplateBody: !Rain::Embed conformancepack-build.yaml
