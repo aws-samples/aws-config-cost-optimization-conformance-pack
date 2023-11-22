@@ -9,7 +9,7 @@ The following dependencies must be installed. Please refer to your operating sys
 
 - Python ~= 3.9.0 and pip
 - Ruby >=2.6 and gem
-- [rain] https://github.com/aws-cloudformation/rain
+- [rain](https://github.com/aws-cloudformation/rain)
 - [virtualenv](https://virtualenv.pypa.io/en/latest/installation.html) (optional)
 - [pre-commit](https://pre-commit.com/#install)
 - [cfn-lint](https://github.com/aws-cloudformation/cfn-lint)
