@@ -1,31 +1,23 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Resources:
-  # AutomationRole:
-  #   Type: AWS::IAM::Role
-  #   Metadata:
-  #     cfn_nag:
-  #       rules_to_suppress:
-  #         - id: W28
-  #           reason: Hardcoded name required for Conformance Pack.
-  #   Properties:
-  #     RoleName: !Sub CostOpt-Automation-${AWS::Region}
-  #     AssumeRolePolicyDocument:
-  #       Version: 2012-10-17
-  #       Statement:
-  #         - Effect: Allow
-  #           Principal:
-  #             Service: ssm.amazonaws.com
-  #           Action: sts:AssumeRole
-  #     # Policies:
-  #     #   - PolicyName: EC2ModifyVolume
-  #     #     PolicyDocument:
-  #     #       Version: 2012-10-17
-  #     #       Statement:
-  #     #         - Effect: Allow
-  #     #           Action: ec2:ModifyVolume
-  #     #           Resource:
-  #     #             - !Sub "arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:volume/*"
+  AutomationRole:
+    Type: AWS::IAM::Role
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W28
+            reason: Hardcoded name required for Conformance Pack.
+    Properties:
+      RoleName: !Sub CostOpt-Automation-${AWS::Region}
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ssm.amazonaws.com
+            Action: sts:AssumeRole
+      Policies: []
 
   CustomConfigFunctionRole:
     Type: AWS::IAM::Role

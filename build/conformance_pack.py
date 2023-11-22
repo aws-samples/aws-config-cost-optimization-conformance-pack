@@ -12,9 +12,9 @@ template = {
 }
 
 files = glob.glob(f"{rules_folder}/[!_sample]**/resources.yaml", recursive=True)
-for function_file in files:
-    rule_name = function_file.split("/")[-2]
-    resource_content = load_yaml(open(function_file, "r", encoding="utf-8").read())
+for resource_file in files:
+    rule_name = resource_file.split("/")[-2]
+    resource_content = load_yaml(open(resource_file, "r", encoding="utf-8").read())
     resources = list(resource_content["Resources"].keys())
     for resource in resources:
         resource_content["Resources"][resource]["Properties"][
