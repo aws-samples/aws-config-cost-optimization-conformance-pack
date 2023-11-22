@@ -7,14 +7,6 @@ template_path = "template.yaml"
 
 template_content = load_yaml(open(template_path, "r", encoding="utf-8"))
 
-# files = glob.glob(f"{rules_folder}/[!_sample]**/policy.yml", recursive=True)
-# for function_file in files:
-#     policy_name = function_file.split("/")[-2].replace("-", "")
-#     policy_content = load_yaml(open(function_file, "r", encoding="utf-8").read())
-#     template_content["Resources"]["CustomConfigFunction"]["Properties"][
-#         "Policies"
-#     ].append(policy_content)
-
 files = glob.glob(f"{rules_folder}/[!_sample]**/remediation.yml", recursive=True)
 for function_file in files:
     resource_prefix = function_file.split("/")[-2].replace("-", "")
