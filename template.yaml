@@ -112,5 +112,7 @@ Resources:
     DependsOn: StackSet
     Properties:
       OrganizationConformancePackName: Cost-Optimization
+      ExcludedAccounts:
+        - !GetAtt OrgDetails.MasterAccountId
       ConformancePackInputParameters: []
       TemplateBody: !Rain::Embed conformancepack-build.yaml
