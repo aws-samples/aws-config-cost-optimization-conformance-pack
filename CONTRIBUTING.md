@@ -127,10 +127,11 @@ will include a remediation option. It is not a requirement but will change the c
 to create in your contribution.
 
 - locate the `rules` subfolder.
-  - Within this folder create a copy of the `_sample` folder. The name of the folder should represent the rule you are implementing. Review existing folder to get an idea.
+  - Within this folder create a copy of the `_sample` folder. The name of the folder should represent the rule you are implementing. Review existing folders to get an idea.
   - Modify the files within this folder as required
     - `function.py` place the Python code that evaluates to the desired AWS Config status for the resource.
-    - `policy.yml` the IAM Policy given to the Lambda function that executes the `function.py`. (Delete if no permissions are required).
+    - `function_policy.yml` the IAM Policy given to the Lambda function that executes the `function.py`. (Delete if no permissions are required).
     - `remediation.yml` an SSM document to be used for remediation if desired. (Delete this file if remediation is not being implemented).
+    - `remediation_policy.yml` the IAM Policy given to the SSM document that executes the remediation. (Delete this file if remediation is not being implemented or if no permissions are required).
     - `resources.yaml` the CloudFormation snippet that is used by the AWS Config Conformance Pack. This only supports `AWS::Config::ConfigRule` and `AWS::Config::RemediationConfiguration` resource types. (Delete the sample resources as required).
 - run `make build` and `make package` to create the `main.yaml` template that can be deployed for testing.

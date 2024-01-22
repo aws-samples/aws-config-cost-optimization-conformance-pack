@@ -4,7 +4,7 @@ This repository contains code to deploy the Cost Optimization Organization Confo
 
 ## Pre-requisites
 
-In order to use this solution, the following components must be already deployed within an AWS account.
+To use this solution, the following components must be already deployed within an AWS account.
 
 - AWS Organizations.
 - AWS Config deployed in same region in all member accounts of the AWS Organization.
