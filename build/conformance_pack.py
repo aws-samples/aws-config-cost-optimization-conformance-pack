@@ -41,6 +41,10 @@ for resource_file in files:
             resource_content["Resources"][resource]["Type"]
             == "AWS::Config::RemediationConfiguration"
         ):
+            if "DependsOn" in resource_content["Resources"][resource]:
+                resource_content["Resources"][resource][
+                    "DependsOn"
+                ] = f'{rule_name.replace("-", "")}{resource_content["Resources"][resource]["DependsOn"]}'
             template["Parameters"][f"{rule_name.replace('-', '')}DocumentArn"] = {
                 "Type": "String"
             }
