@@ -10,6 +10,9 @@ Resources:
         SourceDetails:
           - EventSource: aws.config
             MessageType: ConfigurationItemChangeNotification
+          - EventSource: aws.config
+            MessageType: ScheduledNotification
+            MaximumExecutionFrequency: One_Hour
       InputParameters:
         "{parameterName}": "{parameterValue}"
   Remediation:

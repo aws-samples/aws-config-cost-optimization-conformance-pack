@@ -102,6 +102,80 @@ def build_evaluation(configuration_item, event, rule_parameters):
     }
 
 
+def evaluate_parameters(rule_parameters):
+    if "applicableResourceType" not in rule_parameters:
+        raise ValueError(
+            'The parameter with "applicableResourceType" as key must be defined.'
+        )
+    if not rule_parameters["applicableResourceType"]:
+        raise ValueError(
+            'The parameter "applicableResourceType" must have a defined value.'
+        )
+    return rule_parameters
+
+
+def get_configuration_items(resource_type):
+    resource_keys = list_discovered_resources(resource_type)
+    resource_configs = batch_get_resource_config(resource_keys)
+    configuration_items = []
+    for rc in resource_configs:
+        configuration_items.append(
+            get_configuration(
+                rc["resourceType"],
+                rc["resourceId"],
+            )
+        )
+    return configuration_items
+
+
+def list_discovered_resources(resource_type):
+    response = AWS_CONFIG_CLIENT.list_discovered_resources(resourceType=resource_type)
+    resources = [
+        {"resourceType": r["resourceType"], "resourceId": r["resourceId"]}
+        for r in response["resourceIdentifiers"]
+    ]
+    while "nextToken" in response:
+        response = AWS_CONFIG_CLIENT.list_discovered_resources(
+            resourceType=resource_type, nextToken=response["nextToken"]
+        )
+        resources.extend(
+            [
+                {"resourceType": r["resourceType"], "resourceId": r["resourceId"]}
+                for r in response["resourceIdentifiers"]
+            ]
+        )
+    return resources
+
+
+def batch_get_resource_config(resource_keys):
+    if len(resource_keys) == 0:
+        return []
+    response = AWS_CONFIG_CLIENT.batch_get_resource_config(resourceKeys=resource_keys)
+    resources = [
+        {
+            "resourceType": r["resourceType"],
+            "resourceId": r["resourceId"],
+            "configurationItemCaptureTime": r["configurationItemCaptureTime"],
+        }
+        for r in response["baseConfigurationItems"]
+    ]
+    while len(response["unprocessedResourceKeys"]) > 0:
+        response = AWS_CONFIG_CLIENT.batch_get_resource_config(
+            resourceKeys=response["unprocessedResourceKeys"]
+        )
+        resources.extend(
+            [
+                {
+                    "resourceType": r["resourceType"],
+                    "resourceId": r["resourceId"],
+                    "configurationItemCaptureTime": r["configurationItemCaptureTime"],
+                }
+                for r in response["baseConfigurationItems"]
+            ]
+        )
+    return resources
+
+
 def lambda_handler(event, context):
     # pylint: disable=unused-argument
     check_defined(event, "event")
@@ -109,22 +183,32 @@ def lambda_handler(event, context):
     rule_parameters = (
         json.loads(event["ruleParameters"]) if "ruleParameters" in event else {}
     )
-    if invoking_event["messageType"] in [
-        "ConfigurationItemChangeNotification",
-        "OversizedConfigurationItemChangeNotification",
-    ]:
-        configuration_item = get_configuration_item(invoking_event)
-        evaluations = [
-            build_evaluation(
-                configuration_item,
-                event,
-                rule_parameters,
-            ),
-        ]
-    else:
-        return build_internal_error_response(
-            "Unexpected message type", str(invoking_event)
-        )
+    match invoking_event["messageType"]:
+        case "ScheduledNotification":
+            valid_rule_parameters = evaluate_parameters(rule_parameters)
+            evaluations = [
+                build_evaluation(
+                    configuration_item,
+                    event,
+                    valid_rule_parameters,
+                )
+                for configuration_item in get_configuration_items(
+                    valid_rule_parameters["applicableResourceType"]
+                )
+            ]
+        case "ConfigurationItemChangeNotification" | "OversizedConfigurationItemChangeNotification":
+            configuration_item = get_configuration_item(invoking_event)
+            evaluations = [
+                build_evaluation(
+                    configuration_item,
+                    event,
+                    rule_parameters,
+                ),
+            ]
+        case _:
+            return build_internal_error_response(
+                "Unexpected message type", str(invoking_event)
+            )
     AWS_CONFIG_CLIENT.put_evaluations(
         Evaluations=evaluations,
         ResultToken=event["resultToken"],
