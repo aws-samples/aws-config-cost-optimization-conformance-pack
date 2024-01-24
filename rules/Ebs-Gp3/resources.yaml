@@ -11,7 +11,7 @@ Resources:
           - EventSource: aws.config
             MessageType: ConfigurationItemChangeNotification
       InputParameters:
-        desiredvolumeType: gp3
+        desiredVolumeType: gp3
   Remediation:
     Type: AWS::Config::RemediationConfiguration
     DependsOn: Rule

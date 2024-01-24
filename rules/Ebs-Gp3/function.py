@@ -3,7 +3,7 @@ def evaluate_compliance(configuration_item, valid_rule_parameters):
         return "NON_COMPLIANT"
     if (
         configuration_item["configuration"]["volumeType"]
-        == valid_rule_parameters["desiredvolumeType"]
+        == valid_rule_parameters["desiredVolumeType"]
     ):
         return "COMPLIANT"
 
