@@ -19,7 +19,7 @@ Resources:
           - id: W11
             reason: Resource level permissions not possible on this API.
     Properties:
-      Runtime: python3.10
+      Runtime: python3.12
       Handler: index.handler
       Architectures:
         - arm64
@@ -85,7 +85,7 @@ Resources:
           - id: W11
             reason: Resource level permissions not possible on this API.
     Properties:
-      Runtime: python3.10
+      Runtime: python3.12
       Handler: index.handler
       Architectures:
         - arm64

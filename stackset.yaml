@@ -51,7 +51,7 @@ Resources:
             reason: Reserved Concurrency not required.
     Properties:
       FunctionName: CostOptimizationConformanceConfigRuleFunction
-      Runtime: python3.10
+      Runtime: python3.12
       Handler: index.lambda_handler
       Architectures:
         - arm64
