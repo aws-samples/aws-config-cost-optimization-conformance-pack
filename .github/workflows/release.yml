@@ -29,6 +29,7 @@ jobs:
         run: |
           python ./build/config_function.py
           python ./build/conformance_pack.py
+          python ./build/stackset.py
           python ./build/template.py
 
       - name: Install Rain
@@ -40,7 +41,7 @@ jobs:
 
       - name: Package
         run: |
-          ./rain pkg stackset.yaml --output stackset-pkg.yaml
+          ./rain pkg stackset-build.yaml --output stackset-pkg.yaml
           ./rain pkg template-build.yaml --output main.yaml
 
       - name: Create Release
