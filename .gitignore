@@ -2,3 +2,4 @@ main.yaml
 functions/*-pkg.py
 *-build.yaml
 *-pkg.yaml
+.venv/
