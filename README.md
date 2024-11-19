@@ -13,7 +13,7 @@ For this solution the following will be deployed:
 - **AWS CloudFormation StackSet** - a collection of CloudFormation stacks deployed into all the member accounts in the AWS Organization. These stacks will deploy the following:
   - **AWS Lambda Function** - The AWS Config custom rules invoke a Lambda function that contains the logic to evaluate whether the specified resource is either Compliant or Noncompliant with cost optimization best practice rules defined above.
   - **IAM Roles** - Two custom IAM roles will be deployed. One that will enable the Lambda function to be invoked and the second which will be used by AWS Systems Manager (SSM) to carry out remediation actions as defined in the SSM document.
-- **AWS Systems Manager Automation Document** - This will deployed into the audit account only and used by the member accounts.
+- **AWS Systems Manager Automation Document** - This will be deployed into the audit account only and used by the member accounts.
 
 
 ## Pre-requisites
@@ -52,7 +52,7 @@ For the purposes of this deployment walkthrough, our management account ID will 
     - `aws organizations register-delegated-administrator --account-id 222222222222 --service-principal config-multiaccountsetup.amazonaws.com`
     - `aws organizations register-delegated-administrator --account-id 222222222222 --service-principal config.amazonaws.com`
     - `aws organizations register-delegated-administrator  --service-principal=member.org.stacksets.cloudformation.amazonaws.com  --account-id=222222222222`
-2. Validate they have been successful by running the following commands where you should see the listed delegated admininstrators:
+2. Validate they have been successful by running the following commands where you should see the listed delegated administrators:
     - `aws organizations list-delegated-administrators --service-principal=config.amazonaws.com`
     - `aws organizations list-delegated-administrators --service-principal=config-multiaccountsetup.amazonaws.com`
     - `aws organizations list-delegated-administrators  --service-principal=member.org.stacksets.cloudformation.amazonaws.com`
