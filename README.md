@@ -103,3 +103,12 @@ To delete the Cost Optimization Conformance Pack solution (CLI)
 ## Further Reading
 
 You can find out more about [AWS Config custom Lambda rules](https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config_develop-rules_nodejs.html) and [AWS Systems Manager documents](https://docs.aws.amazon.com/systems-manager/latest/userguide/documents.html) to expand the functionality of the solution further. 
+
+
+## Security 
+
+See [CONTRIBUTING](https://github.com/aws-samples/aws-config-cost-optimization-conformance-pack/blob/main/CONTRIBUTING.md) for more information.
+
+## License 
+
+This library is licensed under the MIT-0 License. See the LICENSE file.
