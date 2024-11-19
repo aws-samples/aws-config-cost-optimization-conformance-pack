@@ -2,9 +2,9 @@
 
 This repository contains code to deploy the Cost Optimization Conformance Pack solution across an AWS Organization that utilises Control Tower. It includes an example collection of three custom rules containing best practice cost optimization logic. These will monitor and evaluate your resources to identify their cost optimization compliance posture and consolidate the results back to a single ‘delegated administrator’ account for simplified management. The following rules are included:
 
-Rule 1: Check for EBS gp2 volumes Remediation: Convert them to gp3 volumes 
-Rule 2: Check for EBS volumes not attached to an EC2 instance
-Rule 3: Check for S3 buckets that do not have a lifecycle configuration policy 
+- Rule 1: Check for EBS gp2 volumes Remediation: Convert them to gp3 volumes 
+- Rule 2: Check for EBS volumes not attached to an EC2 instance
+- Rule 3: Check for S3 buckets that do not have a lifecycle configuration policy 
 
 For this solution the following will be deployed:
 
@@ -15,6 +15,9 @@ For this solution the following will be deployed:
   - **IAM Roles** - Two custom IAM roles will be deployed. One that will enable the Lambda function to be invoked and the second which will be used by AWS Systems Manager (SSM) to carry out remediation actions as defined in the SSM document.
 - **AWS Systems Manager Automation Document** - This will be deployed into the audit account only and used by the member accounts.
 
+## Architecture Overview
+
+![Architecture Overview](images/Architecture.PNG)
 
 ## Pre-requisites
 
